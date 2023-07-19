@@ -1,80 +1,91 @@
-function [outputArg1,outputArg2] = DetectOptoLight(video_files_path,processed_files_path, create_videos, recalibrate)
+function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_files_path, create_videos, recalibrate)
 
-    videos = dir(fullfile(video_files_path, '*.mp4'));
-    processed_files = dir(fullfile(processed_files_path, '*.csv'));
+    video_files = dir(fullfile(video_files_path, '*.mp4'));
+    processed_files = dir(fullfile(processed_files_path, '*.xlsx'));
     
-    %check this is not empty
-    if create_videos
-        % Create a VideoWriter object, using the same frame rate as the source video.
-        outputVideo = VideoWriter('outVideo.mp4', 'MPEG-4'); 
-        outputVideo.FrameRate = v.FrameRate;
-    end
+    %check if videos and processed files exist
+    assert(isempty({video_files.name})==0, 'No video files found check video path')
+    assert(isempty({processed_files.name})==0, 'No processed files found check processed files path')
     
-    %if the file opto_calibrate exists or if recalibrate is set to true, redo
-    %calibration
-    if ~exist('opto_calibrate.mat', 'file') == 2 || recalibrate == true
-        v = VideoReader(vid_path);
+    %create output video folder if it does not exist
+    %if create_videos
+    %end
+    %create a waitbar
+    h = waitbar(0,'Processing files...');
     
-        % Read the first frame from the video file
-        first_frame = readFrame(v);
-    
-        % Display the first frame
-        figure, imshow(first_frame);
-        title('Click 2 points on the image, top-right and bottom-left');
-        
-        % Initialize points
-        points = zeros(2,2);
-        
-        % Allow user to select 4 points
-        for i = 1:2
-            [x, y] = ginput(1);
-            
-            % Save the point to the variable
-            points(i,:) = [x, y];
-        
-            % Display the point on the image
-            hold on;
-            plot(x, y, 'r*');
-            hold off;
-        end
-        save('opto_calibrate.mat', 'points')
-        close;
-    else
-        load('opto_calibrate.mat', 'points')
-    end
     
     %loop over all processed files
-    for processed_file=processed_files
+    for i=1:numel(processed_files)
         %load the processed file
-        proc_file = readtable(processed_file);
+        proc_file = readtable(fullfile(processed_files_path, processed_files(i).name));
+        filename_parts = split(processed_files(i).name, 'Deep');
+        
+        fprintf('\n')
+        fprintf(strcat(processed_files(i).name,'\n\n'));
+    
         %find the correspoding video
+        vid_path = fullfile(video_files_path, strcat(char(filename_parts(1)),'.mp4'));
+    
+        %if the file opto_calibrate exists or if recalibrate is set to true, redo
+        %calibration
+        if ~exist('opto_calibrate.mat', 'file') == 2 || recalibrate == true
+            selectCropPoints(vid_path);
+        else
+            load('opto_calibrate.mat', 'points')
+        end
+    
         %load the video
         v = VideoReader(vid_path);
+        
+        %create a output video
+        if create_videos
+            % Create a VideoWriter object, using the same frame rate as the source video.
+            outputVideo = VideoWriter(fullfile(output_video_path,strcat(char(filename_parts(1)),'_opto.avi')), 'Uncompressed AVI'); 
+            outputVideo.FrameRate = v.FrameRate;
+            open(outputVideo);
+        end
+        
+        %text position for writing onto the video
+        text_position = [20 20]; % Define position for text
+    
+        %assign an on_off list based on number of frames
+        totalFrames = v.NumFrames;
+        %cropping rectangle
+        rectangle = [points(2,1), points(1,2), abs(points(1,1) - points(2,1)), abs(points(1,2)-points(2,2))];
         %main list which tracks the light for all frames
-        on_off_list = [];
+        on_off_list = zeros(totalFrames,1);
+        frame_count = 1;
         %loop over frames and detect blue light
         while hasFrame(v)
             % Read a frame.
             frame = readFrame(v);
-            %crop frame
-            use_frame = frame()
+            %crop frame based on saved calibration
+            use_frame = imcrop(frame,rectangle);
             %run blue light detector on a frame
-            on_off = detectBlueLight(frame);
-            on_off_list = [on_off_list,on_off];
+            on_off = detectBlueLight(use_frame);
+            on_off_list(frame_count,1) = on_off;
+            frame_count = frame_count +1;
             if create_videos
                 % Write text on the frame.
-                position = [10 10]; % Define position for text
-                frame = insertText(frame, position, 'ON', 'FontSize', 18, 'TextColor', 'white', 'BoxOpacity', 0);
+                if on_off
+                    use_frame = insertText(use_frame, text_position, 'ON', 'FontSize', 18, 'TextColor', 'blue', 'BoxOpacity', 0);
+                end
                 % Write the frame to the new video file.
-                writeVideo(outputVideo, frame);
+                writeVideo(outputVideo, use_frame);
             end
-        %make directory if it does not exist and save after appending
-        proc_file.NewColumn = on_off_list;
-        newFilename = 'myData_new.csv';  % replace with your new .csv file name
-        writetable(T, newFilename);
+        end
+        
+        %write to xlsx file
+        proc_file.OptoLight = on_off_list;
+        newFilename = fullfile(output_optofile_path,processed_files(i).name);
+        writetable(proc_file, newFilename);
     
         if create_videos
             close(outputVideo);
         end
-        end
+    
+        fprintf('Done! \n\n')
+        %update waitbar
+        waitbar(i/numel(processed_files))
     end
+end

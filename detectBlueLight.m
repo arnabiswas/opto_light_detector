@@ -3,8 +3,8 @@ function [on_off] = detectBlueLight(img)
     hsv = rgb2hsv(img);
     
     % Define the range of blue color in HSV
-    lower_blue = [110/360, 0.2, 0.2];
-    upper_blue = [130/360, 1.0, 1.0];
+    lower_blue = [110/180, 0.7, 0.2];
+    upper_blue = [130/180, 1.0, 1.0];
     
     % Create a mask of the blue area
     mask = (hsv(:,:,1) >= lower_blue(1)) & (hsv(:,:,1) <= upper_blue(1)) ...
@@ -18,7 +18,7 @@ function [on_off] = detectBlueLight(img)
     contours = bwboundaries(mask, 'noholes');
     
     % If there are any contours that means we have detected blue color
-    if ~isempty(contours)
+    if length(contours)>3 && sum(reshape(mask,[],1))>80
         on_off = 1;
     else
         on_off = 0;
