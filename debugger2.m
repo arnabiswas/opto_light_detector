@@ -31,21 +31,23 @@ else
     load('opto_calibrate.mat', 'points')
 end
 
-%load the video
-total_frames = v.NumFrames;
 
 v = VideoReader(vid_path);
+%load the video
+total_frames = v.NumFrames;
 
 %%
 rand_idx = randi([1,total_frames],1,1);
 %rand_idx = 8482; %6014; %
-rand_idx = 9787;
+%rand_idx = 7969; %1503;%9787;
 frame = read(v,rand_idx);
 
 %imshow(frame)
+rectangle = [points(2,1), points(1,2), abs(points(1,1) - points(2,1)), abs(points(1,2)-points(2,2))];
+use_frame = imcrop(frame,rectangle);
 
 % Convert the image to HSV
-hsv = rgb2hsv(frame);
+hsv = rgb2hsv(use_frame);
 
 % Define the range of blue color in HSV
 lower_blue = [110/180, 0.7, 0.2];
@@ -57,14 +59,14 @@ mask = (hsv(:,:,1) >= lower_blue(1)) & (hsv(:,:,1) <= upper_blue(1)) ...
      & (hsv(:,:,3) >= lower_blue(3)) & (hsv(:,:,3) <= upper_blue(3));
 
 % Step 4: Bitwise-AND mask and original image
-res = bsxfun(@times, frame, cast(mask,class(frame)));
+res = bsxfun(@times, use_frame, cast(mask,class(use_frame)));
 
-imshow(res)
+imshow(use_frame)
 % Step 5: Find contours in the mask
 contours = bwboundaries(mask, 'noholes');
 
 % If there are any contours that means we have detected blue color
-if length(contours)>3 && sum(sum(reshape(mask,[],1)))>80
+if ~isempty(contours) && sum(reshape(mask,[],1))>80
     on_off = 1;
     text(50,50,'ON','Color','blue','FontSize',34)
 else

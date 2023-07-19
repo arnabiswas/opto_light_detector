@@ -18,7 +18,7 @@ function [on_off] = detectBlueLight(img)
     contours = bwboundaries(mask, 'noholes');
     
     % If there are any contours that means we have detected blue color
-    if length(contours)>3 && sum(reshape(mask,[],1))>80
+    if ~isempty(contours) && sum(reshape(mask,[],1))>80
         on_off = 1;
     else
         on_off = 0;
