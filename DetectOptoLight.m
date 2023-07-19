@@ -1,4 +1,4 @@
-function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_files_path, create_videos, recalibrate)
+function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_files_path, create_videos, recalibrate, output_video_path, output_optofile_path)
 
     video_files = dir(fullfile(video_files_path, '*.mp4'));
     processed_files = dir(fullfile(processed_files_path, '*.xlsx'));
