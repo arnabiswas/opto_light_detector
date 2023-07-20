@@ -11,7 +11,7 @@ function detectOptoLight(video_files_path, processed_files_path, create_videos, 
     %if create_videos
     %end
     %create a waitbar
-    waitbar(0,'Processing files...');
+    h = waitbar(0,'Processing files...');
     
     
     %loop over all processed files
@@ -90,23 +90,29 @@ function detectOptoLight(video_files_path, processed_files_path, create_videos, 
         end
         
         %write to xlsx file
-        if filter_output
-            debug = true; % if you want to show convolution filtering plots
-            on_off_list = filterLight(on_off_list, min_on_duration, v.FrameRate, debug);
-        end
-
         %error handling for if total frames are more than total rows in the
         %.xlxs file
         if size(proc_file,1)~= size(on_off_list,1)
             fprintf('Mismatch between frames in video and .xlsx file \n')
-            newFilename = fullfile(output_optofile_path,processed_files(i).name);
             proc_file = array2table(on_off_list, 'VariableNames',{'optoLight'});
-            writetable(proc_file, newFilename);
         else
             proc_file.OptoLight = on_off_list;
             newFilename = fullfile(output_optofile_path,processed_files(i).name);
             writetable(proc_file, newFilename);
         end
+
+        if filter_output
+            debug = false; % if you want to show convolution filtering plots
+            try
+                on_off_list_filtered = filterLight(on_off_list, min_on_duration, v.FrameRate, debug);
+                proc_file.OptoLightFiltered = on_off_list_filtered;
+            catch
+                fprintf('Filtering failed, set debug to true to diagnose')
+            end
+        end
+
+        newFilename = fullfile(output_optofile_path,processed_files(i).name);        
+        writetable(proc_file, newFilename);
     
         if create_videos
             close(outputVideo);
@@ -116,4 +122,5 @@ function detectOptoLight(video_files_path, processed_files_path, create_videos, 
         %update waitbar
         waitbar(i/numel(processed_files))
     end
+    delete(h)
 end

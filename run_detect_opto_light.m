@@ -1,5 +1,5 @@
-clear
-clc
+clear;
+clc;
 
 video_files_path = '/ssd02/Projects/Data/jen_projects/ting_optogentics';
 processed_files_path = '/ssd02/Projects/Data/jen_projects/ting_optogentics/dummy_processed_files';
