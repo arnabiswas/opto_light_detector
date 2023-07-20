@@ -1,4 +1,4 @@
-function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_files_path, create_videos, recalibrate, output_video_path, output_optofile_path)
+function detectOptoLight(video_files_path, processed_files_path, create_videos, recalibrate, output_video_path, output_optofile_path, filter_output, min_on_duration)
 
     video_files = dir(fullfile(video_files_path, '*.mp4'));
     processed_files = dir(fullfile(processed_files_path, '*.xlsx'));
@@ -11,7 +11,7 @@ function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_f
     %if create_videos
     %end
     %create a waitbar
-    h = waitbar(0,'Processing files...');
+    waitbar(0,'Processing files...');
     
     
     %loop over all processed files
@@ -25,7 +25,12 @@ function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_f
     
         %find the correspoding video
         vid_path = fullfile(video_files_path, strcat(char(filename_parts(1)),'.mp4'));
-    
+        
+        % check if file has already been processed then skip
+        if ~isfile(strcat(output_optofile_path, processed_files(i).name))
+            fprintf('File has already been processed\n\n')
+            continue
+        end
         %if the file opto_calibrate exists or if recalibrate is set to true, redo
         %calibration
         if ~exist('opto_calibrate.mat', 'file') == 2 || recalibrate == true
@@ -34,13 +39,22 @@ function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_f
             load('opto_calibrate.mat', 'points')
         end
     
-        %load the video
-        v = VideoReader(vid_path);
+        %load the video and some error handling if a video is not found
+        try
+            v = VideoReader(vid_path);
+        catch
+            fprintf('Error reading video check if video exists or \nvideo filename EXACTLY matches processed filename\n\n')
+            fprintf(strcat('Based on processed file- searching for video', vid_path,'\n\n'))
+            fprintf('Whereas video folder contains these videos\n\n')
+            char({video_files.name})
+            delete(h)
+            return;
+        end
         
         %create a output video
         if create_videos
             % Create a VideoWriter object, using the same frame rate as the source video.
-            outputVideo = VideoWriter(fullfile(output_video_path,strcat(char(filename_parts(1)),'_opto.avi')), 'Uncompressed AVI'); 
+            outputVideo = VideoWriter(fullfile(output_video_path,strcat(char(filename_parts(1)),'_opto.avi')), 'Motion JPEG AVI'); 
             outputVideo.FrameRate = v.FrameRate;
             open(outputVideo);
         end
@@ -76,9 +90,23 @@ function [outputArg1,outputArg2] = DetectOptoLight(video_files_path, processed_f
         end
         
         %write to xlsx file
-        proc_file.OptoLight = on_off_list;
-        newFilename = fullfile(output_optofile_path,processed_files(i).name);
-        writetable(proc_file, newFilename);
+        if filter_output
+            debug = true; % if you want to show convolution filtering plots
+            on_off_list = filterLight(on_off_list, min_on_duration, v.FrameRate, debug);
+        end
+
+        %error handling for if total frames are more than total rows in the
+        %.xlxs file
+        if size(proc_file,1)~= size(on_off_list,1)
+            fprintf('Mismatch between frames in video and .xlsx file \n')
+            newFilename = fullfile(output_optofile_path,processed_files(i).name);
+            proc_file = array2table(on_off_list, 'VariableNames',{'optoLight'});
+            writetable(proc_file, newFilename);
+        else
+            proc_file.OptoLight = on_off_list;
+            newFilename = fullfile(output_optofile_path,processed_files(i).name);
+            writetable(proc_file, newFilename);
+        end
     
         if create_videos
             close(outputVideo);

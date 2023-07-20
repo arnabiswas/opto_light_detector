@@ -8,8 +8,10 @@ output_optofile_path = '/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_
 create_videos = true;
 recalibrate = false;
 
-filter_output = true;
-min_on_duration=30; %minimum chunk of duration that the light is on
-num_times_light_on=5; %how many times does the light stay on
+filter_output = false;
+min_on_duration=30; %minimum
+%chunk of duration that the light is on in seconds
 
-DetectOptoLight(video_files_path, processed_files_path, create_videos, recalibrate);
+detectOptoLight(video_files_path, processed_files_path, ...
+    create_videos, recalibrate, output_video_path, ...
+    output_optofile_path, filter_output, min_on_duration);
