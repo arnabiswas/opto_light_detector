@@ -1,0 +1,12 @@
+min_on_duration = 30;
+framerate = 30;
+debug = true;
+
+%load processed file
+opto
+opto_processed_path = '/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_out/processed_files/' ;
+opdir(fullfile('/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_out/processed_files/', '*.xlxs'));
+T = readtable('/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_out/processed_files/RC6-11_0.5mvDeepCut_resnet50_opto stim live testJul10shuffle1_1030000-processed.xlsx');
+on_off_list_in =  T.OptoLight;
+
+on_off_list_out= filterLight(on_off_list_in, min_on_duration, framerate, debug);

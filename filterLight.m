@@ -10,7 +10,7 @@ order = 2;
 framelen = 1001;
 filtered_conv = sgolayfilt(conv_out,order,framelen);
 peak_threshold = ceil(min_on_duration*framerate*0.25);
-peak_width_threshold = ceil(min_on_duration*framerate);
+peak_width_threshold = ceil(min_on_duration*framerate *0.1);
 
 [~, light_end] = findpeaks(filtered_conv, 'MinPeakHeight', peak_threshold);
 [~,light_start] = findpeaks(-filtered_conv, 'MinPeakWidth', peak_width_threshold); %assumes light start and end will be the same, not always true

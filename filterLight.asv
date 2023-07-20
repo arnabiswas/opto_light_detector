@@ -10,18 +10,29 @@ order = 2;
 framelen = 1001;
 filtered_conv = sgolayfilt(conv_out,order,framelen);
 peak_threshold = ceil(min_on_duration*framerate*0.25);
+peak_width_threshold = ceil(min_on_duration*framerate *0.5);
 
 [~, light_end] = findpeaks(filtered_conv, 'MinPeakHeight', peak_threshold);
-[~,light_start] = findpeaks(-filtered_conv);
+[~,light_start] = findpeaks(-filtered_conv, 'MinPeakWidth', peak_width_threshold); %assumes light start and end will be the same, not always true
+   
+if debug
+    figure
+    plot(conv_out)
+    hold on
+    scatter(light_end, ones(length(light_end),1)*200)
+    %scatter(light_start, ones(length(light_start),1))
+    scatter(light_start, ones(length(light_start),1))
+end
 
-%a sliding window search moving backward from every convolution signal peak
+% sliding window search moving forward from troughs in convolution signal
 %this indicates when the light starts
-for i = 1:numel(light_start)
+for i = 1:numel(light_end)
     frames = 1;
-    while conv_out(ligh_start(i))-conv_out(ligh_start(i)+frames)~=0
+    while conv_out(light_start(i))-conv_out(light_start(i)+frames)==0
             frames = frames+1;
     end
-        light_start(i) = light_start(i)+frames;
+    light_start(i) = light_start(i)+frames;
+    
 end
 
 on_off_list_out = zeros(length(on_off_list_in),1);
@@ -31,12 +42,5 @@ for i = 1:numel(light_end)
 end
 
 if debug
-    [~,light_start] = findpeaks(-filtered_conv);
-    figure
-    plot(conv_out)
-    hold on
-    scatter(light_end, ones(length(light_end),1)*200)
-    %scatter(light_start, ones(length(light_start),1))
-    scatter(alt_light_start, ones(length(alt_light_start),1))
     plot(on_off_list_out*200)
 end

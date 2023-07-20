@@ -2,7 +2,6 @@ clc;
 clear all;
 close all;
 
-n1 = 0 : 1 : 7;
 T = readtable('/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_out/processed_files/RC6-11_0.5mvDeepCut_resnet50_opto stim live testJul10shuffle1_1030000-processed.xlsx');
 y1 = T.OptoLight;
 h1 = ones(1,30*30);
