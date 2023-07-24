@@ -27,7 +27,7 @@ function detectOptoLight(video_files_path, processed_files_path, create_videos, 
         vid_path = fullfile(video_files_path, strcat(char(filename_parts(1)),'.mp4'));
         
         % check if file has already been processed then skip
-        if ~isfile(strcat(output_optofile_path, processed_files(i).name))
+        if isfile(strcat(output_optofile_path, processed_files(i).name))
             fprintf('File has already been processed\n\n')
             continue
         end
