@@ -94,12 +94,13 @@ function detectOptoLight(video_files_path, processed_files_path, create_videos, 
         %.xlxs file
         if size(proc_file,1)~= size(on_off_list,1)
             fprintf('Mismatch between frames in video and .xlsx file \n')
-            proc_file = array2table(on_off_list, 'VariableNames',{'optoLight'});
+            proc_file = array2table(on_off_list, 'VariableNames',{'OptoLight'});
         else
             proc_file.OptoLight = on_off_list;
-            newFilename = fullfile(output_optofile_path,processed_files(i).name);
-            writetable(proc_file, newFilename);
         end
+        newFilename = fullfile(output_optofile_path,processed_files(i).name);
+        writetable(proc_file, newFilename);
+
 
         if filter_output
             debug = false; % if you want to show convolution filtering plots
