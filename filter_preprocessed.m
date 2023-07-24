@@ -1,8 +1,10 @@
-debug = true;
 
-%load processed file
-opto_processed_path = '/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_out/processed_files/';
-%'C:\Users\Jennifer_Hoy\Desktop\ting_optogentics\opto_out\processed_files\';
+debug = false;
+
+%point to folder with all .xlsx files that have the OptoLight column
+opto_processed_path = '/ssd02/Projects/Data/jen_projects/ting_optogentics/opto_out/';
+
+
 opto_processed_files = dir(fullfile(opto_processed_path, '*.xlsx'));
 
 for i = 1:numel(opto_processed_files)
