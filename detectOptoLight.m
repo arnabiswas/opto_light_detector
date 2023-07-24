@@ -105,10 +105,10 @@ function detectOptoLight(video_files_path, processed_files_path, create_videos, 
         if filter_output
             debug = false; % if you want to show convolution filtering plots
             try
-                on_off_list_filtered = filterLight(on_off_list, min_on_duration, v.FrameRate, debug);
+                on_off_list_filtered = filterLight(on_off_list, debug);
                 proc_file.OptoLightFiltered = on_off_list_filtered;
             catch
-                fprintf('Filtering failed, set debug to true to diagnose')
+                fprintf('Filtering failed, set debug to true to diagnose\n')
             end
         end
 

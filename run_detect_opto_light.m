@@ -20,7 +20,7 @@ recalibrate = false;
 
 %filters the light on off signal to be a step function is appended as
 %OptoLightFiltered in the output processed file
-filter_output = false;
+filter_output = true;
 
 detectOptoLight(video_files_path, processed_files_path, ...
     create_videos, recalibrate, output_video_path, ...
